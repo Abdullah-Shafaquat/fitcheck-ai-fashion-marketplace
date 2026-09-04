@@ -1,0 +1,423 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  description   String?
+  price         Float
+  oldPrice      Float?
+  category      String
+  subCategory   String?
+  gender        String
+  sizes         String[] @default([])
+  colors        String[] @default([])
+  images        String[] @default([])
+  colorImages   Json     @default("{}")
+  stock         Int      @default(0)
+  rating        Float    @default(0)
+  reviews       Int      @default(0)
+  badge         String?
+  featured      Boolean  @default(false)
+  latestArrival Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  sku           String?  @unique
+  productReviews Review[]
+
+  // --- Marketplace (multi-vendor) ownership ---
+  sellerId          String?
+  seller            SellerProfile? @relation(fields: [sellerId], references: [id], onDelete: SetNull)
+  productOwnerType  String   @default("PLATFORM") // PLATFORM | SELLER
+  approvalStatus    String   @default("APPROVED")  // DRAFT | PENDING_REVIEW | APPROVED | REJECTED
+  rejectionReason   String?
+  lowStockThreshold Int      @default(5)
+  inventory         Json?
+  sellerProfileProducts SellerProfileProduct[]
+
+  @@index([sellerId])
+  @@index([productOwnerType])
+  @@index([approvalStatus])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  author    String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+model Order {
+  id               String    @id @default(cuid())
+  orderNo          String    @unique
+  clientRef        String?   @unique
+  customer         String
+  email            String
+  phone            String
+  address          String
+  city             String
+  zip              String
+  country          String
+  items            Json
+  subtotal         Float
+  shipping         Float
+  discount         Float     @default(0)
+  total            Float
+  currency         String    @default("PKR")
+  status           String    @default("Pending")
+  paymentProvider  String    @default("SAFEPAY")
+  paymentStatus    String    @default("PENDING")
+  transactionId    String?
+  paymentReference String?
+  paidAt           DateTime?
+  createdAt        DateTime  @default(now())
+
+  // --- Order management (v2) ---
+  statusHistory    Json      @default("[]")
+  addressSnapshot  Json?
+  expectedDeliveryAt DateTime?
+  expectedDeliveryEndAt DateTime?
+  trackingNumber   String?
+  lastStatusChangeAt DateTime?
+  updatedAt        DateTime  @default(now()) @updatedAt
+  cancelledAt      DateTime?
+  cancelledBy      String?
+  cancellationReason String?
+  cancellationReasonDetails String?
+  refundStatus     String?   // NONE | REQUESTED | APPROVED | REJECTED | REFUNDED
+  refundReason     String?
+  refundReasonDetails String?
+  refundRequestedAt DateTime?
+  refundApprovedAt DateTime?
+  refundedAt       DateTime?
+  refundedBy       String?
+
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([email])
+  @@index([createdAt])
+}
+
+model UserAddress {
+  id         String   @id @default(cuid())
+  email      String
+  fullName   String
+  phone      String
+  label      String   @default("Home")
+  line1      String
+  line2      String?
+  area       String?
+  city       String
+  province   String?
+  postalCode String?
+  country    String   @default("Pakistan")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([email])
+}
+
+model User {
+  id                   String    @id @default(cuid())
+  name                 String
+  email                String    @unique
+  passwordHash         String
+  provider             String    @default("email")
+  image                String?
+  phone                String?
+  accountStatus        String    @default("ACTIVE")
+  adminNotes           String?
+  forcePasswordReset   Boolean   @default(false)
+  blockedAt            DateTime?
+  blockedBy            String?
+  blockReason          String?
+  blockReasonDetails   String?
+  deletedAt            DateTime?
+  lastLoginAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  role                 String    @default("CUSTOMER") // CUSTOMER | SELLER | ADMIN
+
+  passwordResetTokens  PasswordResetToken[]
+  sellerProfile        SellerProfile?
+
+  @@index([accountStatus])
+  @@index([email])
+  @@index([role])
+}
+
+model BlockedEmail {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  reason           String
+  reasonDetails    String?
+  blockedAt        DateTime  @default(now())
+  blockedBy        String    @default("admin")
+  unblockedAt      DateTime?
+  unblockedBy      String?
+  isActive         Boolean   @default(true)
+  userId           String?
+
+  @@index([isActive])
+  @@index([email])
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdBy  String    @default("admin")
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model CustomerAuditLog {
+  id            String   @id @default(cuid())
+  action        String
+  targetEmail   String
+  targetUserId  String?
+  adminId       String   @default("admin")
+  details       String?
+  createdAt     DateTime @default(now())
+
+  @@index([targetEmail])
+  @@index([targetUserId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String?
+  type      String
+  title     String
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+// ================= Seller / Marketplace (Multi-Vendor) =================
+
+model SellerProfile {
+  id          String  @id @default(cuid())
+  userId      String  @unique
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Business identity
+  storeName      String
+  storeSlug      String   @unique
+  ownerName      String
+  email          String
+  phone          String?
+  businessType   String?
+  description    String?
+  address        String?
+  city           String?
+  province       String?
+  country        String   @default("Pakistan")
+  verificationDoc String?
+  socialLinks    Json     @default("{}")
+  logo           String?
+  banner         String?
+  supportContact String?
+
+  // Workflow status
+  approvalStatus  String   @default("PENDING") // PENDING | UNDER_REVIEW | APPROVED | REJECTED | SUSPENDED | BLOCKED | INACTIVE
+  rejectionReason String?
+  adminNotes      String?
+  blockedAt       DateTime?
+  blockedBy       String?
+  blockReason     String?
+  blockReasonDetails String?
+  approvedAt      DateTime?
+  approvedBy      String?
+  // Identity verification pipeline: NOT_SUBMITTED | SUBMITTED | UNDER_REVIEW | RESUBMISSION_REQUIRED | VERIFIED
+  verificationStatus String @default("NOT_SUBMITTED")
+
+  verification SellerVerification?
+
+  @@index([approvalStatus])
+  @@index([userId])
+  @@index([verificationStatus])
+
+  // Commission (seller-specific overrides global default)
+  commissionRate Float?
+
+  // Financial balances (source of truth)
+  availableBalance Float @default(0)
+  pendingBalance   Float @default(0)
+  totalEarnings    Float @default(0)
+  totalPaidOut     Float @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products            SellerProfileProduct[]
+  sellerProducts      Product[]
+  payouts             SellerPayout[]
+  notifications       SellerNotification[]
+  auditLogs           SellerAuditLog[]
+  earnings            SellerEarning[]
+}
+
+// Seller-owned products; platform products use Product.sellerId = null.
+model SellerProfileProduct {
+  id        String  @id @default(cuid())
+  sellerId  String
+  seller    SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  productId String @unique
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([sellerId])
+}
+
+model SellerPayout {
+  id            String  @id @default(cuid())
+  sellerId      String
+  seller        SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  amount        Float
+  status        String  @default("PENDING") // PENDING | UNDER_REVIEW | APPROVED | PROCESSING | PAID | REJECTED | FAILED
+  method        String  @default("bank")     // bank | easypaisa | jazzcash | other
+  accountDetails Json   @default("{}")
+  requestedAt   DateTime @default(now())
+  approvedAt    DateTime?
+  paidAt        DateTime?
+  paymentReference String?
+  adminNotes    String?
+  rejectionReason String?
+
+  @@index([sellerId])
+  @@index([status])
+  @@index([requestedAt])
+}
+
+model SellerAuditLog {
+  id         String  @id @default(cuid())
+  sellerId   String
+  seller     SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  action     String
+  performedBy String @default("admin")
+  target     String?
+  details    String?
+  createdAt  DateTime @default(now())
+
+  @@index([sellerId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model SellerNotification {
+  id        String  @id @default(cuid())
+  sellerId  String
+  seller    SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  message   String
+  link      String?
+  read      Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([sellerId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+// Ledger of earning/commission/payout adjustments for a seller.
+model SellerEarning {
+  id          String  @id @default(cuid())
+  sellerId    String
+  seller      SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  kind        String  // CREDIT (fulfilled sale) | REFUND_DEDUCT | CANCELLATION_ADJUST | PAYOUT | AVAILABLE_TRANSFER
+  orderNo     String?
+  productName String?
+  gross       Float   @default(0)
+  commission  Float   @default(0)
+  commissionRate Float @default(0)
+  net         Float   @default(0)
+  balanceAfter Float  @default(0)
+  note        String?
+  createdAt   DateTime @default(now())
+
+  @@index([sellerId])
+  @@index([kind])
+  @@index([orderNo])
+}
+
+// Simple marketplace-level settings (commission, approval flags, payout min).
+model MarketplaceSetting {
+  key   String @id
+  value String
+  updatedAt DateTime @updatedAt
+}
+
+// Identity verification for a seller. One record per seller.
+// Stores private verification documents (CNIC, verification images, live video).
+// These must NEVER be exposed publicly — only the owning seller and admins.
+model SellerVerification {
+  id       String @id @default(cuid())
+  sellerId String @unique
+  seller   SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  // CNIC
+  cnicNumber   String?
+  cnicFrontPath String?
+  cnicBackPath  String?
+
+  // Required verification images (array of { key, label, path })
+  verificationImages Json?
+
+  // Live camera verification video
+  liveVideoPath     String?
+  liveVideoDuration Int?
+  liveVideoThumbnail String?
+
+  // Per-item admin review status: PENDING | VERIFIED | REJECTED | RESUBMISSION_REQUESTED
+  cnicStatus    String @default("PENDING")
+  cnicReason    String?
+  cnicReviewedAt DateTime?
+  imagesStatus  String @default("PENDING")
+  imagesReason  String?
+  imagesReviewedAt DateTime?
+  videoStatus   String @default("PENDING")
+  videoReason   String?
+  videoReviewedAt DateTime?
+
+  submittedAt  DateTime?
+  resubmissionRequiredAt DateTime?
+  lastReviewedBy String?
+  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now())
+
+  @@index([sellerId])
+}
+
+model playing_with_neon {
+  id    Int    @id @default(autoincrement())
+  name  String
+  value Float? @db.Real
+}

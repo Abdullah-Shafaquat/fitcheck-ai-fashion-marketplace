@@ -1,0 +1,441 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@theme {
+  --color-primary: #FF6B35;
+  --color-secondary: #1F1F1F;
+
+  /* FitCheck Dark Editorial Theme */
+  --color-ink: #0B0B0D;
+  --color-ink-soft: #121216;
+  --color-surface: #17171C;
+  --color-surface-2: #1E1E24;
+  --color-line: rgba(255, 255, 255, 0.08);
+  --color-frost: rgba(255, 255, 255, 0.06);
+  --color-cream: #F4F1EA;
+
+  --font-display: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  --perspective-deep: 1400px;
+}
+.container {
+  width: 96%;
+  margin: auto;
+}
+
+/* ============================================================
+   PREMIUM LIGHT EDITORIAL SYSTEM
+   Elevation, spacing + typographic primitives for the light,
+   luxury customer experience. Kept in the same CSS-first layer
+   so every page shares one visual language.
+   ============================================================ */
+@theme {
+  /* Refined elevation (light surfaces) */
+  --shadow-lift: 0 1px 2px rgba(20, 20, 30, 0.04), 0 8px 24px -12px rgba(20, 20, 30, 0.10);
+  --shadow-raise: 0 2px 4px rgba(20, 20, 30, 0.05), 0 20px 50px -20px rgba(20, 20, 30, 0.22);
+  --shadow-card: 0 1px 2px rgba(20,20,30,0.04), 0 16px 40px -20px rgba(20,20,30,0.18);
+  --shadow-soft: 0 6px 20px -8px rgba(20, 20, 30, 0.10);
+
+  /* Refined radii scale */
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.75rem;
+
+  --color-canvas: #FBFAF8;
+  --color-ink-light: #16151A;
+
+  --font-editorial: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Editorial display type — light surfaces */
+.editorial-title {
+  font-family: var(--font-editorial);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+  color: var(--color-secondary);
+}
+
+/* Kicker / eyebrow above headings */
+.eyebrow-light {
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+/* Premium image shell with soft ambient shadow */
+.img-frame {
+  background: #fff;
+  border: 1px solid rgba(20, 20, 30, 0.06);
+  box-shadow: var(--shadow-card);
+}
+
+/* Horizontal rule that separates editorial sections */
+.rule-premium {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, rgba(20,20,30,0.14), transparent);
+}
+
+/* Section rhythm for editorial pages */
+.section-pad {
+  padding: clamp(3.5rem, 8vw, 7rem) 0;
+}
+
+/* Subtle lift-on-hover shared by cards/buttons */
+.rise {
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.rise:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-raise);
+}
+
+/* Product image zoom wrapper */
+.zoom-media img,
+.zoom-media {
+  transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.group:hover .zoom-media img,
+.zoom-media:hover img {
+  transform: scale(1.08);
+}
+
+/* Premium pill buttons */
+.btn-premium {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.85rem 1.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  background: var(--color-secondary);
+  color: #fff;
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1),
+              background 0.35s ease,
+              box-shadow 0.35s ease;
+  box-shadow: 0 10px 30px -12px rgba(20,20,30,0.35);
+}
+.btn-premium:hover {
+  transform: translateY(-2px);
+  background: #000;
+  box-shadow: 0 16px 40px -14px rgba(20,20,30,0.45);
+}
+.btn-premium-primary {
+  background: var(--color-primary);
+  box-shadow: 0 12px 30px -12px rgba(255,107,53,0.55);
+}
+.btn-premium-primary:hover {
+  background: var(--color-primary);
+  filter: brightness(1.05);
+}
+.btn-ghost-premium {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  padding: 0.85rem 1.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid rgba(20,20,30,0.16);
+  color: var(--color-secondary);
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1),
+              border-color 0.35s ease,
+              background 0.35s ease;
+}
+.btn-ghost-premium:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(255,107,53,0.04);
+  transform: translateY(-2px);
+}
+
+/* Soft radial accent used sparingly behind editorial heroes */
+.accent-halo {
+  pointer-events: none;
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.5;
+}
+
+/* Reduced-motion guard for premium motion utilities */
+@media (prefers-reduced-motion: reduce) {
+  .rise, .btn-premium, .btn-ghost-premium { transition: none; transform: none !important; box-shadow: none; }
+  .zoom-media img { transition: none; transform: none; }
+}
+
+/* ---------- Dark editorial base for transformed pages ---------- */
+.theme-dark {
+  background-color: var(--color-ink);
+  color: #fff;
+  color-scheme: dark;
+}
+.editorial-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+  font-weight: 800;
+  line-height: 0.95;
+}
+.eyebrow {
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: radial-gradient(rgba(255,255,255,0.35) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+/* ---------- 3D depth utilities ---------- */
+.perspective {
+  perspective: var(--perspective-deep);
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.tilt-layer {
+  transform: translateZ(30px);
+}
+.tilt-layer-sm {
+  transform: translateZ(18px);
+}
+.tilt-layer-lg {
+  transform: translateZ(60px);
+}
+.hover-lift {
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.depth-shadow {
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+}
+.depth-shadow-lg {
+  box-shadow: 0 50px 100px -30px rgba(0, 0, 0, 0.75);
+}
+.glow-line {
+  background: linear-gradient(90deg, transparent, rgba(255,107,53,0.6), transparent);
+}
+.text-outline {
+  -webkit-text-stroke: 1px rgba(255,255,255,0.18);
+  color: transparent;
+}
+
+/* Scroll-reveal driven via IntersectionObserver for non-motion fallback */
+.ed-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1);
+}
+.ed-reveal.is-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ed-reveal { opacity: 1; transform: none; }
+  .perspective, .preserve-3d { perspective: none; transform-style: flat; }
+  .tilt-layer, .tilt-layer-sm, .tilt-layer-lg { transform: none; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-2px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(255, 107, 53, 0); }
+}
+
+@keyframes heroSlideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes heroFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes revealFadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 1.5s ease-in-out infinite;
+}
+
+.animate-hero-slide-up {
+  animation: heroSlideUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+.animate-hero-fade-in {
+  animation: heroFadeIn 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+.animate-reveal {
+  animation: revealFadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+.stagger-1 { animation-delay: 80ms; }
+.stagger-2 { animation-delay: 160ms; }
+.stagger-3 { animation-delay: 240ms; }
+.stagger-4 { animation-delay: 320ms; }
+.stagger-5 { animation-delay: 400ms; }
+.stagger-6 { animation-delay: 480ms; }
+
+/* Scroll-triggered reveal states — toggled via JS class */
+.reveal-hidden {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-hidden-scale {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal-visible-scale {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.reveal-hidden-left {
+  opacity: 0;
+  transform: translateX(-32px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal-hidden-right {
+  opacity: 0;
+  transform: translateX(32px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal-visible-x {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Opacity-only page transition — no transform, so it never breaks position:fixed descendants */
+@keyframes fadeInOnly {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in-only {
+  animation: fadeInOnly 0.3s ease-out both;
+}
+
+/* Opacity-only overlay fade — safe for fixed-position overlays */
+.animate-overlay-fade {
+  animation: fadeInOnly 0.2s ease-out forwards;
+}
+
+/* For prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* AI assistant floating launcher attention pulse */
+@keyframes assistantPulse {
+  0%, 100% { box-shadow: 0 10px 30px -8px rgba(255, 107, 53, 0.5); }
+  50% { box-shadow: 0 10px 36px -4px rgba(255, 107, 53, 0.85); }
+}
+
+/* ---------------- Receipt / invoice printing ---------------- */
+@media print {
+  body {
+    background: #fff !important;
+  }
+  body.printing-receipt * {
+    visibility: hidden;
+  }
+  body.printing-receipt .print-area,
+  body.printing-receipt .print-area * {
+    visibility: visible;
+  }
+  body.printing-receipt .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
