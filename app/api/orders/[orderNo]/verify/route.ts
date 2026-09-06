@@ -11,6 +11,18 @@ import {
 } from "@/lib/payment-utils";
 import { fetchSafePayPayment, safepayCredentialsConfigured } from "@/lib/safepay";
 import { notifyAdmin, notifyCustomer } from "@/lib/notify";
+import { PaymentProviderId } from "@/lib/payments";
+
+// Draw the provider from the stored paymentProvider label. Alternate hosted
+// flows (JazzCash / Easypaisa) confirm payment via server-side IPN webhooks, so
+// for those the database record IS the authoritative state — Safepay's tracker
+// API is not consulted.
+function providerForOrder(order: { paymentProvider: string | null }): PaymentProviderId {
+  const label = (order.paymentProvider || "").trim().toLowerCase();
+  if (label.startsWith("jazzcash")) return "jazzcash";
+  if (label.startsWith("easypaisa")) return "easypaisa";
+  return "safepay";
+}
 
 export type VerifyResultStatus = "PAID" | "FAILED" | "CANCELLED" | "PENDING";
 
@@ -47,6 +59,16 @@ export async function POST(
         { error: "Payment session does not match this order" },
         { status: 400 }
       );
+    }
+
+    // JazzCash / Easypaisa are verified through their IPN webhooks; there is no
+    // public payment lookup, so the recorded DB state is the source of truth.
+    const provider = providerForOrder(order);
+    if (provider === "jazzcash" || provider === "easypaisa") {
+      return NextResponse.json({
+        status: order.paymentStatus === "PAID" ? "PAID" : "PENDING",
+        order: serializeOrder(order),
+      });
     }
 
     if (!safepayCredentialsConfigured()) {

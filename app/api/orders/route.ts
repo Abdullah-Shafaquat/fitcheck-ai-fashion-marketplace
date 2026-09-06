@@ -5,8 +5,7 @@ import {
   OrderItemRecord,
   COD_PROVIDER,
 } from "@/lib/payment-utils";
-import { safepayCredentialsConfigured } from "@/lib/safepay";
-import { getPaymentProvider } from "@/lib/payments";
+import { getPaymentProvider, PaymentProviderId } from "@/lib/payments";
 import {
   computeShippingCost,
   getShippingConfig,
@@ -55,15 +54,19 @@ function baseUrl(req: NextRequest): string {
   );
 }
 
-async function buildSafePayForOrder(
+async function buildPaymentSessionForOrder(
   orderId: string,
   orderNo: string,
   total: number,
+  providerId: PaymentProviderId,
   req: NextRequest
 ) {
   // Route through the unified payment provider layer. The authoritative total is
   // passed here (never client-supplied) and the provider returns the redirect.
-  const provider = getPaymentProvider("safepay")!;
+  const provider = getPaymentProvider(providerId);
+  if (!provider) {
+    throw new Error("Unknown payment provider.");
+  }
   const session = await provider.createSession({
     orderId,
     orderNo,
@@ -80,10 +83,29 @@ async function buildSafePayForOrder(
   return session.redirectUrl;
 }
 
-// Whether the (only) online provider is available to create sessions.
-async function onlineProviderReady(): Promise<boolean> {
-  // Safepay is the sole enabled online provider; keep the fast env check.
-  return safepayCredentialsConfigured();
+// Whether the given online provider is available to create sessions.
+function onlineProviderReady(providerId: PaymentProviderId): boolean {
+  return Boolean(getPaymentProvider(providerId)?.configured());
+}
+
+// Payment method string -> provider id. "cod" is handled separately.
+function providerIdForPaymentMethod(paymentMethod: unknown): PaymentProviderId | null {
+  const method = String(paymentMethod || "")
+    .trim()
+    .toLowerCase();
+  if (method === "online" || method === "safepay") return "safepay";
+  if (method === "jazzcash") return "jazzcash";
+  if (method === "easypaisa") return "easypaisa";
+  return null;
+}
+
+// Reverse map for the stored paymentProvider label on orders, used when
+// rebuilding a checkout session for a reused pending order.
+function paymentMethodLabelFor(order: { paymentProvider: string | null }): PaymentProviderId {
+  const label = (order.paymentProvider || "").trim().toUpperCase();
+  if (label === "JAZZCASH") return "jazzcash";
+  if (label === "EASYPAISA") return "easypaisa";
+  return "safepay";
 }
 
 export async function GET(req: NextRequest) {
@@ -163,20 +185,22 @@ export async function POST(req: NextRequest) {
 
     const isCod = body.paymentMethod === "cod" || body.cod === true;
 
-    // JazzCash / Easypaisa are config-gated SCAFFOLDING only. The backend
-    // integrations are not wired up yet, so we never create an order and never
-    // fake a "live" payment for them. Customers are directed to Safepay or COD.
-    if (body.paymentMethod === "jazzcash" || body.paymentMethod === "easypaisa") {
+    // JazzCash / Easypaisa are config-gated. Resolve the chosen method to a
+    // provider; validate it is actually configured before creating an order so
+    // we never write an order we cannot process. Customers are only directed to
+    // these hosted flows when merchant credentials are present in the env.
+    const providerId = providerIdForPaymentMethod(body.paymentMethod);
+    if (providerId && !onlineProviderReady(providerId)) {
       return NextResponse.json(
         {
           error:
-            "Direct JazzCash/Easypaisa checkout is not available yet. Please use the online Safepay checkout or Cash on Delivery.",
+            "That payment method is not available right now. Please use the online Safepay checkout or Cash on Delivery.",
         },
         { status: 400 }
       );
     }
 
-    const ALLOWED_PAYMENT_METHODS = ["online", "cod", "safepay"];
+    const ALLOWED_PAYMENT_METHODS = ["online", "cod", "safepay", "jazzcash", "easypaisa"];
     if (!ALLOWED_PAYMENT_METHODS.includes(String(body.paymentMethod || ""))) {
       return NextResponse.json(
         { error: "Unsupported payment method." },
@@ -300,10 +324,11 @@ export async function POST(req: NextRequest) {
       if (existing) {
         if (existing.paymentStatus === "PENDING") {
           try {
-            const checkoutUrl = await buildSafePayForOrder(
+            const checkoutUrl = await buildPaymentSessionForOrder(
               existing.id,
               existing.orderNo,
               existing.total,
+              paymentMethodLabelFor(existing),
               req
             );
             return NextResponse.json(
@@ -311,10 +336,10 @@ export async function POST(req: NextRequest) {
               { status: 201 }
             );
           } catch (error) {
-            console.error("Safepay session creation failed (reuse):", error);
+            console.error("Payment session creation failed (reuse):", error);
             return NextResponse.json(
               {
-                error: `Payment could not be started (Safepay). Your order #${existing.orderNo} was saved. Please contact support or try again later.`,
+                error: `Payment could not be started. Your order #${existing.orderNo} was saved. Please contact support or try again later.`,
                 order: serializeOrder(existing),
                 checkoutUrl: null,
               },
@@ -374,7 +399,9 @@ export async function POST(req: NextRequest) {
           total,
           currency: "PKR",
           status: initialStatus,
-          paymentProvider: isCod ? COD_PROVIDER : "SAFEPAY",
+          paymentProvider: isCod
+            ? COD_PROVIDER
+            : (providerId || "safepay").toUpperCase(),
           paymentStatus: "PENDING",
           paymentReference: orderNo,
           statusHistory: historyToJson(initialHistory),
@@ -392,10 +419,11 @@ export async function POST(req: NextRequest) {
         });
         if (existing) {
           try {
-            const checkoutUrl = await buildSafePayForOrder(
+            const checkoutUrl = await buildPaymentSessionForOrder(
               existing.id,
               existing.orderNo,
               existing.total,
+              paymentMethodLabelFor(existing),
               req
             );
             return NextResponse.json(
@@ -403,10 +431,10 @@ export async function POST(req: NextRequest) {
               { status: 201 }
             );
           } catch (error) {
-            console.error("Safepay session creation failed (race):", error);
+            console.error("Payment session creation failed (race):", error);
             return NextResponse.json(
               {
-                error: `Payment could not be started (Safepay). Your order #${existing.orderNo} was saved. Please contact support or try again later.`,
+                error: `Payment could not be started. Your order #${existing.orderNo} was saved. Please contact support or try again later.`,
                 order: serializeOrder(existing),
                 checkoutUrl: null,
               },
@@ -478,7 +506,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!(await onlineProviderReady())) {
+    if (!onlineProviderReady(providerId || "safepay")) {
       await notifyAdmin({
         type: "order",
         title: "New Order Received",
@@ -504,10 +532,11 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const checkoutUrl = await buildSafePayForOrder(
+      const checkoutUrl = await buildPaymentSessionForOrder(
         order.id,
         order.orderNo,
         order.total,
+        providerId || "safepay",
         req
       );
       await notifyAdmin({
@@ -528,10 +557,10 @@ export async function POST(req: NextRequest) {
         { status: 201 }
       );
     } catch (error) {
-      console.error("Safepay session creation failed:", error);
+      console.error("Payment session creation failed:", error);
       return NextResponse.json(
         {
-          error: `Payment could not be started (Safepay). Your order #${order.orderNo} was saved. Please contact support or try again later.`,
+          error: `Payment could not be started. Your order #${order.orderNo} was saved. Please contact support or try again later.`,
           order: serializeOrder(order),
           checkoutUrl: null,
         },

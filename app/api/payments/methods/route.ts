@@ -48,9 +48,9 @@ function configuredLabel(id: string): string {
         ? "Available (production)"
         : "Available (sandbox — test mode)";
     case "jazzcash":
-      return "Enabled. Backend processing wired via the provider layer.";
+      return "Enabled. Checkout redirects to JazzCash's hosted page.";
     case "easypaisa":
-      return "Enabled. Backend processing wired via the provider layer.";
+      return "Enabled. Checkout redirects to Easypaisa's hosted page.";
     default:
       return "Available";
   }

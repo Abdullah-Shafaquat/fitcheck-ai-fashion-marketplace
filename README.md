@@ -244,7 +244,7 @@ All secrets are provided at runtime via environment variables. **Never commit re
 | Variable | Purpose |
 | --- | --- |
 | `SAFEPAY_*` (client/secret, base URL, `SAFEPAY_WEBHOOK_SECRET`) | Safepay live/sandbox integration + webhook signature verification (legacy `SAFTPAY_WEBHOOK_SECRET` accepted as fallback) |
-| `JAZZCASH_*`, `EASYPAISA_*` | JazzCash / Easypaisa merchant credentials (checkout is hard-blocked until these are present) |
+| `JAZZCASH_*`, `EASYPAISA_*` | JazzCash / Easypaisa merchant credentials. When set, checkout offers direct hosted-wallet payment (IPN webhook confirms the order); when empty the options stay "coming soon". |
 
 **Optional / feature variables:** carrier/tracking credentials for the shipping-tracking registry, email provider, object storage for uploads, and monitoring keys. Refer to `.env.example` and `docs/production-deployment.md`.
 

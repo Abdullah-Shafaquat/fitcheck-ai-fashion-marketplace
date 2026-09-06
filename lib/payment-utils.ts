@@ -207,13 +207,21 @@ export async function markOrderPaid(
 
   const items = (Array.isArray(order.items) ? order.items : []) as OrderItemRecord[];
 
-  // Reflect the actual method used, when Safepay provides one, for accurate
-  // admin/receipt display. Falls back to the neutral "SAFEPAY" provider label.
+  // Reflect the actual method used, when a provider supplies one, for accurate
+  // admin/receipt display. Defaults to the provider recorded on the order or a
+  // neutral Safepay label for legacy orders.
+  const recordedProvider = (order.paymentProvider || "").trim().toUpperCase();
+  const providerLabel =
+    recordedProvider === "JAZZCASH"
+      ? "JazzCash"
+      : recordedProvider === "EASYPAISA"
+        ? "Easypaisa"
+        : "Safepay";
   const methodLabel = isCodOrder(order)
     ? "Cash on Delivery"
     : opts?.method?.trim()
-      ? `Safepay · ${opts.method.trim()}`
-      : "SAFEPAY";
+      ? `${providerLabel} · ${opts.method.trim()}`
+      : providerLabel;
 
   try {
     await prisma.$transaction(async (tx) => {

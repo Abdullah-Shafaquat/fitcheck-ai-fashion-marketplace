@@ -1,11 +1,11 @@
 /**
  * Config-gated alternate payment providers (JazzCash / Easypaisa).
  *
- * These are SCAFFOLDING ONLY. They are NOT live integrations. A provider only
- * becomes selectable at checkout once its merchant credentials are present in
- * the environment. Even when configured, orders are NOT automatically
- * processed through the provider until the corresponding backend integration
- * is implemented (see `app/api/orders` and the note in each method below).
+ * A provider becomes selectable at checkout once its merchant credentials are
+ * present in the environment. When configured, orders are created through the
+ * unified provider layer and the customer is redirected to the provider's
+ * hosted checkout; payments are confirmed server-side via the provider's IPN
+ * webhook (signature + amount verified against the authoritative order).
  */
 
 import { getPaymentProvider } from "@/lib/payments";
@@ -38,7 +38,7 @@ export function getAlternatePaymentInfo(): AlternatePaymentProviderInfo[] {
       enabled: jazzcashConfigured(),
       status: jazzcashConfigured() ? "available" : "coming_soon",
       note: jazzcashConfigured()
-        ? "Enabled. Backend processing requires the JazzCash integration to be wired up."
+        ? "Enabled. Checkout redirects to JazzCash's hosted page."
         : "Coming soon — enable by setting JazzCash merchant credentials in the environment.",
     },
     {
@@ -47,7 +47,7 @@ export function getAlternatePaymentInfo(): AlternatePaymentProviderInfo[] {
       enabled: easypaisaConfigured(),
       status: easypaisaConfigured() ? "available" : "coming_soon",
       note: easypaisaConfigured()
-        ? "Enabled. Backend processing requires the Easypaisa integration to be wired up."
+        ? "Enabled. Checkout redirects to Easypaisa's hosted page."
         : "Coming soon — enable by setting Easypaisa merchant credentials in the environment.",
     },
   ];

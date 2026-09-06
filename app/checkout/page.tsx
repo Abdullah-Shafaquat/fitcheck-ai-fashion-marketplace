@@ -636,27 +636,26 @@ export default function CheckoutPage() {
                 </div>
 
                 {(paymentMethod === "jazzcash" || paymentMethod === "easypaisa") && (
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50/50 overflow-hidden">
-                    <div className="flex items-center gap-4 p-5 border-b border-amber-100">
-                      <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-                        <IoWarningOutline size={24} className="text-amber-500" />
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 overflow-hidden">
+                    <div className="flex items-center gap-4 p-5 border-b border-emerald-100">
+                      <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                        <IoShieldCheckmarkOutline size={24} className="text-emerald-600" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-secondary">
                           {paymentMethod === "jazzcash" ? "JazzCash" : "Easypaisa"}
                         </p>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          Direct wallet checkout is not enabled on this store yet.
+                          Direct wallet checkout is enabled for this store.
                         </p>
                       </div>
                     </div>
                     <div className="p-5 text-xs text-gray-500 leading-relaxed">
                       <p>
-                        Direct <span className="font-bold text-secondary">{paymentMethod === "jazzcash" ? "JazzCash" : "Easypaisa"}</span>{" "}
-                        checkout is currently unavailable. Please use the online{" "}
-                        <span className="font-bold text-secondary">Safepay</span> checkout (which supports
-                        JazzCash and Easypaisa on its secure page) or{" "}
-                        <span className="font-bold text-secondary">Cash on Delivery</span>.
+                        You will be redirected to{" "}
+                        <span className="font-bold text-secondary">{paymentMethod === "jazzcash" ? "JazzCash" : "Easypaisa"}</span>&apos;s
+                        secure page to authorize the payment. Your order is confirmed once the payment
+                        is verified.
                       </p>
                     </div>
                   </div>
@@ -752,17 +751,16 @@ export default function CheckoutPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={paymentMethod === "jazzcash" || paymentMethod === "easypaisa"}
+                    disabled={
+                      (paymentMethod === "jazzcash" || paymentMethod === "easypaisa") &&
+                      !(alternateProviders.find((p) => p.id === paymentMethod)?.enabled ?? false)
+                    }
                     className="flex-1 py-3.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {paymentMethod === "jazzcash" || paymentMethod === "easypaisa" ? (
-                      "Available if enabled"
-                    ) : (
-                      <>
-                        <IoCheckmarkCircle size={16} />
-                        Continue to Review
-                      </>
-                    )}
+                    <>
+                      <IoCheckmarkCircle size={16} />
+                      Continue to Review
+                    </>
                   </button>
                 </div>
 
@@ -780,7 +778,7 @@ export default function CheckoutPage() {
 
                 <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
                   <IoLockClosedOutline size={12} />
-                  {paymentMethod === "cod" ? "No advance payment required" : paymentMethod === "jazzcash" || paymentMethod === "easypaisa" ? "Config-gated scaffolding — not a live payment" : "Secured by Safepay"}
+                  {paymentMethod === "cod" ? "No advance payment required" : paymentMethod === "jazzcash" || paymentMethod === "easypaisa" ? "You will be redirected to the provider's secure page" : "Secured by Safepay"}
                 </div>
               </form>
             ) : (
@@ -982,20 +980,26 @@ export default function CheckoutPage() {
                       reviewValidating ||
                       reviewIssues.length > 0 ||
                       reviewDirty ||
-                      paymentMethod === "jazzcash" ||
-                      paymentMethod === "easypaisa"
+                      ((paymentMethod === "jazzcash" || paymentMethod === "easypaisa") &&
+                        !(alternateProviders.find((p) => p.id === paymentMethod)?.enabled ?? false))
                     }
                     className="flex-1 py-3.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {placing ? (
                       <>
                         <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                        {paymentMethod === "cod" ? "Placing your order..." : "Redirecting to Safepay..."}
+                        {paymentMethod === "cod" ? "Placing your order..." : "Redirecting to payment..."}
                       </>
                     ) : (
                       <>
                         <IoLockClosedOutline size={16} />
-                        {paymentMethod === "cod" ? "Place Order (Pay on Delivery)" : "Pay with Safepay"}
+                        {paymentMethod === "cod"
+                          ? "Place Order (Pay on Delivery)"
+                          : paymentMethod === "jazzcash"
+                          ? "Pay with JazzCash"
+                          : paymentMethod === "easypaisa"
+                          ? "Pay with Easypaisa"
+                          : "Pay with Safepay"}
                       </>
                     )}
                   </button>
@@ -1015,7 +1019,11 @@ export default function CheckoutPage() {
 
                 <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
                   <IoLockClosedOutline size={12} />
-                  {paymentMethod === "cod" ? "No advance payment required" : "Secured by Safepay"}
+                  {paymentMethod === "cod"
+                    ? "No advance payment required"
+                    : paymentMethod === "jazzcash" || paymentMethod === "easypaisa"
+                    ? "Payments processed by the provider's secure page"
+                    : "Secured by Safepay"}
                 </div>
               </form>
             )}
