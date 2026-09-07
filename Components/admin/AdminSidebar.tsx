@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -34,15 +34,13 @@ const links = [
 const AdminSidebar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      localStorage.getItem("adminSidebarCollapsed") === "true",
+  );
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("adminSidebarCollapsed");
-    if (saved === "true") setCollapsed(true);
-  }, []);
 
   const toggleCollapse = () => {
     setCollapsed((p) => {
@@ -66,7 +64,7 @@ const AdminSidebar: React.FC = () => {
 
   const sidebarWidth = collapsed ? "w-20" : "w-64";
 
-  const SidebarContent = () => (
+  const sidebarContent = (
     <div className="flex flex-col h-full">
       {/* Brand */}
       <div
@@ -110,13 +108,10 @@ const AdminSidebar: React.FC = () => {
         {links.map((link, i) => {
           const Icon = link.icon;
           const active = isActive(link.href);
-          const hovered = hoveredIdx === i;
           return (
             <Link
               key={link.href}
               href={link.href}
-              onMouseEnter={() => setHoveredIdx(i)}
-              onMouseLeave={() => setHoveredIdx(null)}
               onClick={() => setMobileOpen(false)}
               className={`
                 relative flex items-center ${collapsed ? "justify-center" : "gap-3"} 
@@ -304,7 +299,7 @@ const AdminSidebar: React.FC = () => {
             className={`transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`}
           />
         </button>
-        <SidebarContent />
+        {sidebarContent}
       </aside>
     </>
   );

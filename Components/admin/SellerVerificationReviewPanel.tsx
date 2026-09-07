@@ -55,6 +55,56 @@ const statusStyle: Record<string, string> = {
 };
 
 type ItemKey = "cnic" | "images" | "video";
+type ReviewAction = "VERIFIED" | "REJECTED" | "RESUBMISSION_REQUESTED";
+
+function ReasonNote({ reason }: { reason: string | null }) {
+  if (!reason) return null;
+  return (
+    <p className="text-xs text-gray-400 mt-1.5">
+      <span className="font-semibold text-gray-500">Admin note:</span> {reason}
+    </p>
+  );
+}
+
+function VerifyActions({
+  item,
+  busyItem,
+  onVerify,
+  onReject,
+  onResubmit,
+}: {
+  item: ItemKey;
+  busyItem: ItemKey | null;
+  onVerify: (item: ItemKey) => void;
+  onReject: (item: ItemKey) => void;
+  onResubmit: (item: ItemKey) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        onClick={() => onVerify(item)}
+        disabled={busyItem === item}
+        className="px-3 py-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1"
+      >
+        <FiCheck size={13} /> Verify
+      </button>
+      <button
+        onClick={() => onReject(item)}
+        disabled={busyItem === item}
+        className="px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1"
+      >
+        <FiX size={13} /> Reject
+      </button>
+      <button
+        onClick={() => onResubmit(item)}
+        disabled={busyItem === item}
+        className="px-3 py-1.5 text-xs font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1"
+      >
+        <FiRefreshCw size={13} /> Request Resubmission
+      </button>
+    </div>
+  );
+}
 
 interface ReviewPanelProps {
   sellerId: string;
@@ -92,7 +142,7 @@ export default function SellerVerificationReviewPanel({ sellerId, verification, 
 
   const fileUrl = (p: string) => `/api/seller/verification/file?path=${encodeURIComponent(p)}`;
 
-  const doReview = async (action: "VERIFIED" | "REJECTED" | "RESUBMISSION_REQUESTED", item: ItemKey, reason?: string) => {
+  const doReview = async (action: ReviewAction, item: ItemKey, reason?: string) => {
     setBusyItem(item);
     try {
       const res = await fetch(`/api/admin/marketplace/sellers/${encodeURIComponent(sellerId)}/verification`, {
@@ -116,35 +166,6 @@ export default function SellerVerificationReviewPanel({ sellerId, verification, 
   };
 
   const itemLabel = (item: ItemKey) => (item === "cnic" ? "CNIC" : item === "images" ? "Verification Images" : "Live Video");
-
-  const ItemActions = ({ item }: { item: ItemKey }) => (
-    <div className="flex flex-wrap items-center gap-2">
-      <button
-        onClick={() => doReview("VERIFIED", item)}
-        disabled={busyItem === item}
-        className="px-3 py-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1"
-      >
-        <FiCheck size={13} /> Verify
-      </button>
-      <button
-        onClick={() => setModal({ kind: "reject", item, reason: "" })}
-        disabled={busyItem === item}
-        className="px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1"
-      >
-        <FiX size={13} /> Reject
-      </button>
-      <button
-        onClick={() => setModal({ kind: "resubmit", item, reason: "" })}
-        disabled={busyItem === item}
-        className="px-3 py-1.5 text-xs font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1"
-      >
-        <FiRefreshCw size={13} /> Request Resubmission
-      </button>
-    </div>
-  );
-
-  const ReasonNote = ({ reason }: { reason: string | null }) =>
-    reason ? <p className="text-xs text-gray-400 mt-1.5"><span className="font-semibold text-gray-500">Admin note:</span> {reason}</p> : null;
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-6">
@@ -199,7 +220,13 @@ export default function SellerVerificationReviewPanel({ sellerId, verification, 
             </div>
           ))}
         </div>
-        <ItemActions item="cnic" />
+        <VerifyActions
+          item="cnic"
+          busyItem={busyItem}
+          onVerify={(i) => doReview("VERIFIED", i)}
+          onReject={(i) => setModal({ kind: "reject", item: i, reason: "" })}
+          onResubmit={(i) => setModal({ kind: "resubmit", item: i, reason: "" })}
+        />
       </div>
 
       {/* --- Verification Images --- */}
@@ -233,7 +260,13 @@ export default function SellerVerificationReviewPanel({ sellerId, verification, 
             ))
           )}
         </div>
-        <ItemActions item="images" />
+        <VerifyActions
+          item="images"
+          busyItem={busyItem}
+          onVerify={(i) => doReview("VERIFIED", i)}
+          onReject={(i) => setModal({ kind: "reject", item: i, reason: "" })}
+          onResubmit={(i) => setModal({ kind: "resubmit", item: i, reason: "" })}
+        />
       </div>
 
       {/* --- Live Video --- */}
@@ -264,7 +297,13 @@ export default function SellerVerificationReviewPanel({ sellerId, verification, 
         ) : (
           <div className="w-full h-32 flex items-center justify-center text-gray-300 rounded-xl bg-gray-50 border border-gray-100"><FiVideo size={24} /></div>
         )}
-        <ItemActions item="video" />
+        <VerifyActions
+          item="video"
+          busyItem={busyItem}
+          onVerify={(i) => doReview("VERIFIED", i)}
+          onReject={(i) => setModal({ kind: "reject", item: i, reason: "" })}
+          onResubmit={(i) => setModal({ kind: "resubmit", item: i, reason: "" })}
+        />
       </div>
 
       {/* --- Preview modal --- */}

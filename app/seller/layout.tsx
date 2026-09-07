@@ -59,9 +59,6 @@ export default function SellerLayout({
 
   const isBareRoute =
     pathname === "/seller/login" || pathname === "/seller/apply";
-  if (isBareRoute) {
-    return <>{children}</>;
-  }
 
   // Gate: non-approved sellers may only use the verification center,
   // notifications and profile. Redirect everything else there.
@@ -78,6 +75,10 @@ export default function SellerLayout({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRestricted]);
+
+  if (isBareRoute) {
+    return <>{children}</>;
+  }
 
   // While we don't yet know the approval state (or it's restricted), show a
   // minimal shell with the verification center.

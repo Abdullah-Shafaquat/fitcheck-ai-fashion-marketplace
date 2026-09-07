@@ -173,7 +173,7 @@ export default function CollectionPage({
 
   const hasActiveFilters = selectedColors.length > 0 || selectedSizes.length > 0 || selectedPriceRange !== null || inStockOnly || search.length > 0;
 
-  const FilterSidebar = () => (
+  const filterSidebar = (
     <div className="space-y-6">
       {selectedSubCategory && (
         <div>
@@ -390,7 +390,7 @@ export default function CollectionPage({
         <div className="flex gap-4 sm:gap-6 lg:gap-8">
           {/* Desktop Sidebar */}
           <div className="hidden lg:block w-64 flex-shrink-0">
-            <FilterSidebar />
+            {filterSidebar}
           </div>
 
           {/* Product Grid */}
@@ -491,7 +491,7 @@ export default function CollectionPage({
               </button>
             </div>
             <div className="p-4">
-              <FilterSidebar />
+              {filterSidebar}
             </div>
             <div className="sticky bottom-0 bg-white border-t border-gray-100 p-4">
               <button

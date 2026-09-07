@@ -32,7 +32,6 @@ export default function LiveCameraRecorder({
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [startedAt, setStartedAt] = useState(0);
 
   const [cameraOn, setCameraOn] = useState(false);
   const [recording, setRecording] = useState(false);
@@ -43,8 +42,12 @@ export default function LiveCameraRecorder({
   const [uploadError, setUploadError] = useState("");
 
   useEffect(() => {
-    return () => clearTimer();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, []);
 
   const clearTimer = () => {
@@ -118,12 +121,10 @@ export default function LiveCameraRecorder({
       const blob = new Blob(chunksRef.current, {
         type: recorder.mimeType || "video/webm",
       });
-      setStartedAt(0);
       finishBlob(blob);
     };
     const start = Date.now();
     recorder.start(1000);
-    setStartedAt(start);
     setRecording(true);
     setElapsed(0);
     timerRef.current = setInterval(() => {
