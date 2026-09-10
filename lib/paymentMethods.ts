@@ -17,8 +17,7 @@ export interface AlternatePaymentProviderInfo {
   label: string;
   /** Whether merchant credentials are configured in the environment. */
   enabled: boolean;
-  /** Human-readable status shown at checkout. */
-  status: "available" | "coming_soon";
+  /** Human-readable note (server metadata / admin diagnostics). */
   note: string;
 }
 
@@ -36,30 +35,27 @@ export function getAlternatePaymentInfo(): AlternatePaymentProviderInfo[] {
       id: "jazzcash",
       label: "JazzCash",
       enabled: jazzcashConfigured(),
-      status: jazzcashConfigured() ? "available" : "coming_soon",
       note: jazzcashConfigured()
-        ? "Enabled. Checkout redirects to JazzCash's hosted page."
-        : "Coming soon — enable by setting JazzCash merchant credentials in the environment.",
+        ? "Payment is processed on JazzCash's secure hosted page."
+        : "JazzCash credentials are not configured (NEXT_PUBLIC_JAZZCASH_MERCHANT_ID, JAZZCASH_PASSWORD, JAZZCASH_SALT_KEY).",
     },
     {
       id: "easypaisa",
       label: "Easypaisa",
       enabled: easypaisaConfigured(),
-      status: easypaisaConfigured() ? "available" : "coming_soon",
       note: easypaisaConfigured()
-        ? "Enabled. Checkout redirects to Easypaisa's hosted page."
-        : "Coming soon — enable by setting Easypaisa merchant credentials in the environment.",
+        ? "Payment is processed on Easypaisa's secure hosted page."
+        : "Easypaisa credentials are not configured (NEXT_PUBLIC_EASYPAISA_STORE_ID, EASYPAISA_HASH_KEY).",
     },
   ];
 }
 
 /** Public metadata for the checkout UI (safe to expose). */
 export function getAlternatePaymentInfoPublic() {
-  return getAlternatePaymentInfo().map(({ id, label, enabled, status, note }) => ({
+  return getAlternatePaymentInfo().map(({ id, label, enabled, note }) => ({
     id,
     label,
     enabled,
-    status,
     note,
   }));
 }

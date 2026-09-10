@@ -17,7 +17,6 @@ export async function GET() {
       id,
       label: providerLabel(id),
       enabled: configured,
-      status: configured ? ("available" as const) : ("coming_soon" as const),
       mode: id === "safepay" ? SAFTPAY_MODE : null,
       note: configured
         ? configuredLabel(id)

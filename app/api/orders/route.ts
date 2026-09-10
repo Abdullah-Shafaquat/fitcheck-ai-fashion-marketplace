@@ -99,15 +99,6 @@ function providerIdForPaymentMethod(paymentMethod: unknown): PaymentProviderId |
   return null;
 }
 
-// Reverse map for the stored paymentProvider label on orders, used when
-// rebuilding a checkout session for a reused pending order.
-function paymentMethodLabelFor(order: { paymentProvider: string | null }): PaymentProviderId {
-  const label = (order.paymentProvider || "").trim().toUpperCase();
-  if (label === "JAZZCASH") return "jazzcash";
-  if (label === "EASYPAISA") return "easypaisa";
-  return "safepay";
-}
-
 export async function GET(req: NextRequest) {
   const auth = await requireCustomer(req);
   if (auth.response) return auth.response;
@@ -322,35 +313,87 @@ export async function POST(req: NextRequest) {
         where: { clientRef },
       });
       if (existing) {
-        if (existing.paymentStatus === "PENDING") {
-          try {
-            const checkoutUrl = await buildPaymentSessionForOrder(
-              existing.id,
-              existing.orderNo,
-              existing.total,
-              paymentMethodLabelFor(existing),
-              req
-            );
-            return NextResponse.json(
-              { order: serializeOrder(existing), checkoutUrl },
-              { status: 201 }
-            );
-          } catch (error) {
-            console.error("Payment session creation failed (reuse):", error);
-            return NextResponse.json(
-              {
-                error: `Payment could not be started. Your order #${existing.orderNo} was saved. Please contact support or try again later.`,
-                order: serializeOrder(existing),
-                checkoutUrl: null,
-              },
-              { status: 502 }
-            );
-          }
+        // An order that was actually paid (or refunded) is terminal — never let
+        // the same cart be charged twice. Otherwise the order is retryable: a
+        // pending, failed or expired/cancelled session is safely re-armed for a
+        // fresh payment attempt.
+        if (existing.paymentStatus === "PAID" || existing.paymentStatus === "REFUNDED") {
+          return NextResponse.json(
+            {
+              error: "This order was already paid and cannot be paid again.",
+              order: serializeOrder(existing),
+              checkoutUrl: null,
+            },
+            { status: 200 }
+          );
         }
-        return NextResponse.json(
-          { order: serializeOrder(existing), checkoutUrl: null },
-          { status: 200 }
-        );
+
+        // clientRef is derived only from the cart contents, so rebuild the
+        // session with the payment method the customer selected this time.
+        let order = existing;
+        if (existing.paymentStatus !== "PENDING") {
+          order = await prisma.order.update({
+            where: { id: existing.id },
+            data: {
+              paymentProvider: providerId!.toUpperCase(),
+              paymentStatus: "PENDING",
+              status: "Pending",
+              transactionId: null,
+              cancelledAt: null,
+              cancelledBy: null,
+              cancellationReason: null,
+              cancellationReasonDetails: null,
+              lastStatusChangeAt: new Date(),
+              statusHistory: historyToJson(
+                appendHistory(existing.statusHistory, {
+                  from: existing.status,
+                  to: "Pending",
+                  changedBy: "system",
+                  note: "Order reopened for a new payment attempt.",
+                })
+              ),
+            },
+          });
+        } else if (existing.paymentProvider.toUpperCase() !== providerId!.toUpperCase()) {
+          order = await prisma.order.update({
+            where: { id: existing.id },
+            data: {
+              paymentProvider: providerId!.toUpperCase(),
+              statusHistory: historyToJson(
+                appendHistory(existing.statusHistory, {
+                  from: existing.status,
+                  to: existing.status,
+                  changedBy: "system",
+                  note: `Payment method set to ${providerId}.`,
+                })
+              ),
+            },
+          });
+        }
+
+        try {
+          const checkoutUrl = await buildPaymentSessionForOrder(
+            order.id,
+            order.orderNo,
+            order.total,
+            providerId!,
+            req
+          );
+          return NextResponse.json(
+            { order: serializeOrder(order), checkoutUrl },
+            { status: 201 }
+          );
+        } catch (error) {
+          console.error("Payment session creation failed (reuse):", error);
+          return NextResponse.json(
+            {
+              error: `Payment could not be started. Your order #${order.orderNo} was saved. Please contact support or try again later.`,
+              order: serializeOrder(order),
+              checkoutUrl: null,
+            },
+            { status: 502 }
+          );
+        }
       }
     }
 
@@ -423,7 +466,7 @@ export async function POST(req: NextRequest) {
               existing.id,
               existing.orderNo,
               existing.total,
-              paymentMethodLabelFor(existing),
+              providerId || "safepay",
               req
             );
             return NextResponse.json(

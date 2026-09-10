@@ -19,9 +19,6 @@ import {
 interface AlternateProvider {
   id: "jazzcash" | "easypaisa";
   label: string;
-  enabled: boolean;
-  status: "available" | "coming_soon";
-  note: string;
 }
 
 interface SavedAddress {
@@ -603,30 +600,28 @@ export default function CheckoutPage() {
                     {alternateProviders.map((p) => {
                       const Icon = p.id === "jazzcash" ? IoPhonePortraitOutline : IoWalletOutline;
                       const active = paymentMethod === p.id;
+                      const iconBg = active ? "bg-primary/10" : "bg-gray-100";
+                      const iconColor = active ? "text-primary" : "text-gray-400";
                       return (
                         <button
                           key={p.id}
                           type="button"
-                          disabled={!p.enabled}
                           onClick={() => setPaymentMethod(p.id)}
-                          title={p.note}
                           className={`flex items-start gap-3 p-4 rounded-2xl border text-left transition-all ${
-                            !p.enabled
-                              ? "opacity-55 cursor-not-allowed border-gray-100"
-                              : active
+                            active
                               ? "border-primary bg-primary/5 ring-1 ring-primary/30"
                               : "border-gray-200 hover:border-gray-300"
                           }`}
                         >
-                          <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${active ? "bg-primary/10" : "bg-gray-100"}`}>
-                            <Icon size={22} className={active ? "text-primary" : "text-gray-400"} />
+                          <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
+                            <Icon size={22} className={iconColor} />
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-bold text-secondary">{p.label}</p>
                             <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">
-                              {p.enabled
-                                ? "Pay via your wallet account."
-                                : "Coming soon — will be available once enabled."}
+                              {p.id === "jazzcash"
+                                ? "Pay directly with your JazzCash account on the secure JazzCash page."
+                                : "Pay directly with your Easypaisa account on the secure Easypaisa page."}
                             </p>
                           </div>
                         </button>
@@ -646,7 +641,7 @@ export default function CheckoutPage() {
                           {paymentMethod === "jazzcash" ? "JazzCash" : "Easypaisa"}
                         </p>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          Direct wallet checkout is enabled for this store.
+                          You&apos;ll pay securely on {paymentMethod === "jazzcash" ? "JazzCash" : "Easypaisa"}&apos;s hosted page.
                         </p>
                       </div>
                     </div>
@@ -751,10 +746,6 @@ export default function CheckoutPage() {
                   </button>
                   <button
                     type="submit"
-                    disabled={
-                      (paymentMethod === "jazzcash" || paymentMethod === "easypaisa") &&
-                      !(alternateProviders.find((p) => p.id === paymentMethod)?.enabled ?? false)
-                    }
                     className="flex-1 py-3.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <>
@@ -979,9 +970,7 @@ export default function CheckoutPage() {
                       placing ||
                       reviewValidating ||
                       reviewIssues.length > 0 ||
-                      reviewDirty ||
-                      ((paymentMethod === "jazzcash" || paymentMethod === "easypaisa") &&
-                        !(alternateProviders.find((p) => p.id === paymentMethod)?.enabled ?? false))
+                      reviewDirty
                     }
                     className="flex-1 py-3.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
