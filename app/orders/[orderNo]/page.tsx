@@ -323,7 +323,7 @@ function OrderDetailContent() {
                 {normalizeOrderStatus(state.order.status) === "Cancel Requested" && (
                   <div className="w-full flex items-center gap-2 bg-violet-50 border border-violet-100 text-violet-700 text-xs font-medium rounded-xl px-4 py-3">
                     <FiClock size={14} />
-                    Your cancellation request is being reviewed. You'll be notified once it's approved or declined.
+                    Your cancellation request is being reviewed. You&apos;ll be notified once it&apos;s approved or declined.
                   </div>
                 )}
                 {canCustomerCancel(state.order.status) && (

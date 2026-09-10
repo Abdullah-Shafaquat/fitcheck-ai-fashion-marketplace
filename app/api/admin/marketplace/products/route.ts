@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   // Rejection review info is only needed for REJECTED products on the current
   // page. Look it up with a bounded JSONB filter over the current page's ids
   // instead of loading the entire PRODUCT_REJECTED audit trail.
-  let rejectedReviewById: Record<string, { reviewer: string; reviewedAt: string; reason: string }> = {};
+  const rejectedReviewById: Record<string, { reviewer: string; reviewedAt: string; reason: string }> = {};
   if (status === "REJECTED" && products.length > 0) {
     const productIds = products.map((p) => p.id);
     const reviewLogs = await prisma.$queryRaw<

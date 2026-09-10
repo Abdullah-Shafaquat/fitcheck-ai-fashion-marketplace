@@ -10,10 +10,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const baseUrl = (
-    process.env.NEXTAUTH_URL ||
-    (typeof window === "undefined" ? "http://localhost:3000" : window.location.origin)
-  ).replace(/\/$/, "");
+  const baseUrl = req.nextUrl.origin.replace(/\/$/, "");
 
   const redirectUri = `${baseUrl}/api/auth/google/callback`;
 

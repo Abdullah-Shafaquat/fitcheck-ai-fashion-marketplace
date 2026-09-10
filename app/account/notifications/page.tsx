@@ -163,7 +163,7 @@ export default function NotificationsPage() {
             <div className="bg-white rounded-2xl border border-gray-100 py-16 text-center">
               <FiBell size={32} className="text-gray-300 mx-auto mb-3" />
               <p className="text-sm font-semibold text-[#1F1F1F]">No notifications yet</p>
-              <p className="text-xs text-gray-400 mt-1">You'll see order updates here as they happen.</p>
+              <p className="text-xs text-gray-400 mt-1">You&apos;ll see order updates here as they happen.</p>
             </div>
           ) : (
             <div className="space-y-2.5">

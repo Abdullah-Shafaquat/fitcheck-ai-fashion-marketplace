@@ -3,6 +3,7 @@
 import { useStore } from "@/lib/context/StoreContext";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import EmptyState from "@/Components/ui/EmptyState";
 import { IoHeartOutline, IoBagOutline, IoTrashOutline, IoArrowBackOutline } from "react-icons/io5";
@@ -16,6 +17,7 @@ interface LiveStatus {
 }
 
 export default function WishlistPage() {
+  const router = useRouter();
   const { wishlist, removeFromWishlist, addToCart } = useStore();
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
   const [statusMap, setStatusMap] = useState<Record<string, LiveStatus>>({});
@@ -67,7 +69,7 @@ export default function WishlistPage() {
     const needsVariant =
       (product.sizes?.length ?? 0) > 0 || (product.colors?.length ?? 0) > 1;
     if (needsVariant) {
-      window.location.href = `/products/${product.slug}`;
+      router.push(`/products/${product.slug}`);
       return;
     }
     const size = product.sizes?.[0] || "M";

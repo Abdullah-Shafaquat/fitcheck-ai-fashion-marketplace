@@ -47,6 +47,8 @@ export default function CustomerNotificationBell() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const [now] = useState(() => Date.now());
+
   if (notifications === null) return null;
 
   const unread = notifications.filter((n) => !n.read).length;
@@ -68,7 +70,7 @@ export default function CustomerNotificationBell() {
   };
 
   const timeAgo = (iso: string) => {
-    const diff = Date.now() - new Date(iso).getTime();
+    const diff = now - new Date(iso).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return "just now";
     if (mins < 60) return `${mins}m ago`;

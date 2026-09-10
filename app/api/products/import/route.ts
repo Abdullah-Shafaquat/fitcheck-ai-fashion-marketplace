@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     let imported = 0;
-    let updated = 0;
+    const updated = 0;
     let skipped = 0;
     const errors: string[] = [];
 

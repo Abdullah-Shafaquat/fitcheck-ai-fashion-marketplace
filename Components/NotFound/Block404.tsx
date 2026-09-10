@@ -249,7 +249,7 @@ export default function Block404({
     let idleFrames = 0;
     let shakeX = 0;
     let shakeY = 0;
-    let camX = 0;
+    const camX = 0;
 
     // Reduced motion: draw once, static sculpture, no listeners
     if (reduced) {
@@ -301,7 +301,7 @@ export default function Block404({
     window.addEventListener("blur", deactivate);
 
     /* Painter's order: top rows first, then left→right */
-    let renderOrder: number[] = blocks.map((_, i) => i);
+    const renderOrder: number[] = blocks.map((_, i) => i);
 
     function drawCuboid(
       cx: number,
@@ -595,7 +595,6 @@ export default function Block404({
       scene.removeEventListener("pointercancel", deactivate);
       window.removeEventListener("blur", deactivate);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [size.w, size.h, reduced]);
 
   /* Fade hint once engaged */

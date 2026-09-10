@@ -23,10 +23,13 @@ export interface HomeProduct {
 export function useProducts(
   params: string,
   limit = 8,
-  deps: unknown[] = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  deps: any[] = []
 ): { products: HomeProduct[]; loading: boolean } {
   const [products, setProducts] = useState<HomeProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const depsKey = deps.join("|");
 
   const fetchIt = useCallback(async () => {
     setLoading(true);
@@ -40,17 +43,11 @@ export function useProducts(
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params, limit, ...deps]);
+  }, [params, limit]);
 
   useEffect(() => {
-    let active = true;
     fetchIt();
-    return () => {
-      active = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchIt]);
+  }, [fetchIt, depsKey]);
 
   return { products, loading };
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomBytes } from "crypto";
 import prisma from "@/lib/prisma";
 import {
   assertCanLogin,
@@ -8,9 +9,6 @@ import {
 } from "@/lib/customerAccount";
 import { createCustomerToken, CUSTOMER_COOKIE } from "@/lib/customer-auth";
 import { safeReturnUrl } from "@/lib/redirect";
-
-const baseUrl = (process.env.NEXTAUTH_URL || "http://localhost:3000").replace(/\/$/, "");
-const redirectUri = `${baseUrl}/api/auth/google/callback`;
 
 // Decode the state we originally set (fc:<dest>) and validate it as a safe
 // internal path. Never trust arbitrary query params on the callback.
@@ -27,6 +25,8 @@ function resolveState(state: string | null): string {
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  const baseUrl = url.origin.replace(/\/$/, "");
+  const redirectUri = `${baseUrl}/api/auth/google/callback`;
   const code = url.searchParams.get("code");
   const error = url.searchParams.get("error");
 
@@ -112,7 +112,7 @@ export async function GET(request: Request) {
         data: patch,
       });
     } else {
-      const randomPassword = require("crypto").randomBytes(32).toString("hex");
+      const randomPassword = randomBytes(32).toString("hex");
       const { hash } = await import("bcryptjs");
       const passwordHash = await hash(randomPassword, 12);
 

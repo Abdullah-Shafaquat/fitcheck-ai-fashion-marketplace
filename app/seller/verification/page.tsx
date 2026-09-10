@@ -20,6 +20,32 @@ const VERIFICATION_IMAGE_DEFS = [
   { key: "business_store", label: "Business / Store Image" },
 ];
 
+function StatusBadge({ status }: { status: string }) {
+  if (status === "VERIFIED")
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-semibold bg-emerald-50 text-emerald-600 rounded-full px-2.5 py-1">
+        <FiCheckCircle size={12} /> Verified
+      </span>
+    );
+  if (status === "REJECTED" || status === "RESUBMISSION_REQUESTED")
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-semibold bg-red-50 text-red-600 rounded-full px-2.5 py-1">
+        <FiXCircle size={12} /> Action Required
+      </span>
+    );
+  if (status === "UNDER_REVIEW" || status === "SUBMITTED")
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-semibold bg-blue-50 text-blue-600 rounded-full px-2.5 py-1">
+        <FiClock size={12} /> Under Review
+      </span>
+    );
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full px-2.5 py-1">
+      <FiClock size={12} /> Pending
+    </span>
+  );
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export default function SellerVerificationPage() {
   const [loading, setLoading] = useState(true);
@@ -139,32 +165,6 @@ export default function SellerVerificationPage() {
     } finally {
       setSaving(false);
     }
-  };
-
-  const StatusBadge = ({ status }: { status: string }) => {
-    if (status === "VERIFIED")
-      return (
-        <span className="inline-flex items-center gap-1 text-xs font-semibold bg-emerald-50 text-emerald-600 rounded-full px-2.5 py-1">
-          <FiCheckCircle size={12} /> Verified
-        </span>
-      );
-    if (status === "REJECTED" || status === "RESUBMISSION_REQUESTED")
-      return (
-        <span className="inline-flex items-center gap-1 text-xs font-semibold bg-red-50 text-red-600 rounded-full px-2.5 py-1">
-          <FiXCircle size={12} /> Action Required
-        </span>
-      );
-    if (status === "UNDER_REVIEW" || status === "SUBMITTED")
-      return (
-        <span className="inline-flex items-center gap-1 text-xs font-semibold bg-blue-50 text-blue-600 rounded-full px-2.5 py-1">
-          <FiClock size={12} /> Under Review
-        </span>
-      );
-    return (
-      <span className="inline-flex items-center gap-1 text-xs font-semibold bg-gray-100 text-gray-500 rounded-full px-2.5 py-1">
-        <FiClock size={12} /> Pending
-      </span>
-    );
   };
 
   if (loading) {

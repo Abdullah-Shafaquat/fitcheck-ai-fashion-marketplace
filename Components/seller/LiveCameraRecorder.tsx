@@ -123,7 +123,7 @@ export default function LiveCameraRecorder({
       });
       finishBlob(blob);
     };
-    const start = Date.now();
+    const start = Date.now(); // eslint-disable-line react-hooks/purity
     recorder.start(1000);
     setRecording(true);
     setElapsed(0);

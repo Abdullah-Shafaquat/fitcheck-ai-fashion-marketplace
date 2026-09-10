@@ -9,7 +9,10 @@ import { useEffect, useRef } from "react";
  */
 export function useModal(isOpen: boolean, onClose?: () => void) {
   const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
