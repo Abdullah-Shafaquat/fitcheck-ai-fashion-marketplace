@@ -54,10 +54,21 @@ type Result =
   | { kind: "pending"; order: Order; error?: string }
   | { kind: "missing" };
 
+// Safepay appends its tracker to our redirect URL. Depending on the provider it
+// arrives either as a real `tracker` param or gets rolled into the `order`
+// value (e.g. "FC-123?...&tracker=track_x" ends up as "FC-123?tracker=track_x").
+// Recover it from either shape.
+function trackerFromRaw(raw: string): string {
+  const match = raw.match(/[?&#]tracker=([^&#]+)/i);
+  return match ? decodeURIComponent(match[1]) : "";
+}
+
 function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
-  const rawOrder = searchParams.get("order") || "";
+  const rawOrder = searchParams.get("order") || searchParams.get("orderNo") || "";
   const orderNo = rawOrder.split(/[?&#]/)[0].trim();
+  const trackerParam =
+    (searchParams.get("tracker") || "").trim() || trackerFromRaw(rawOrder);
   const { removePurchasedItems } = useStore();
   const [result, setResult] = useState<Result>(() =>
     orderNo ? { kind: "loading" } : { kind: "missing" }
@@ -72,26 +83,69 @@ function CheckoutSuccessContent() {
     let cancelled = false;
     const run = async () => {
       try {
-        const orderRes = await fetch(`/api/orders/${encodeURIComponent(orderNo)}`);
-        if (!orderRes.ok) {
-          throw new Error("not found");
-        }
-        const orderData = await orderRes.json();
-        const order: Order | undefined = orderData.order;
-        if (!order) {
-          setResult({ kind: "missing" });
-          return;
-        }
+        let order: Order | undefined;
+        let tracker = trackerParam || undefined;
 
-        const tracker = (order as Order & { transactionId?: string | null }).transactionId;
+        // Some providers don't append a tracker, so fall back to fetching the
+        // order first — that endpoint enforces ownership (session or ?email=).
         if (!tracker) {
-          setResult({
-            kind: order.paymentStatus === "PAID" ? "paid" : "pending",
-            order,
-          });
+          const orderRes = await fetch(`/api/orders/${encodeURIComponent(orderNo)}`);
+          if (!orderRes.ok) throw new Error("not found");
+          order = (await orderRes.json()).order as Order | undefined;
+          if (!order) {
+            setResult({ kind: "missing" });
+            return;
+          }
+          tracker = order.transactionId || undefined;
+        }
+
+        const applyStatus = (status: string, resolved: Order, error?: string) => {
+          if (status === "PAID") {
+            if (!cleaned.current && resolved.items && resolved.items.length) {
+              cleaned.current = true;
+              removePurchasedItems(
+                resolved.items.map((it) => ({
+                  productId: it.productId || "",
+                  size: it.size || "",
+                  color: it.color || "",
+                  quantity: it.quantity || 1,
+                }))
+              );
+            }
+            setResult({ kind: "paid", order: resolved });
+          } else if (status === "CANCELLED") {
+            setResult({ kind: "cancelled", order: resolved });
+          } else if (status === "FAILED") {
+            setResult({ kind: "failed", order: resolved, error });
+          } else {
+            setResult({ kind: "pending", order: resolved, error });
+          }
+        };
+
+        const showWithoutTracking = async () => {
+          // No tracker available yet — resolve via the ownership-checked lookup.
+          if (!order) {
+            const orderRes = await fetch(`/api/orders/${encodeURIComponent(orderNo)}`);
+            if (!orderRes.ok) {
+              setResult({ kind: "missing" });
+              return;
+            }
+            order = (await orderRes.json()).order as Order | undefined;
+          }
+          if (!order) {
+            setResult({ kind: "missing" });
+            return;
+          }
+          applyStatus(order.paymentStatus === "PAID" ? "PAID" : "PENDING", order);
+        };
+
+        if (!tracker) {
+          await showWithoutTracking();
           return;
         }
 
+        // The verify endpoint authenticates via the payment tracker itself (no
+        // customer session needed), so guest checkouts can still confirm here.
         const verifyRes = await fetch(
           `/api/orders/${encodeURIComponent(orderNo)}/verify`,
           {
@@ -100,35 +154,24 @@ function CheckoutSuccessContent() {
             body: JSON.stringify({ tracker }),
           }
         );
+
+        if (!verifyRes.ok) {
+          // Tracker didn't match this order (or unknown order). Fall back to the
+          // ownership-checked lookup so a logged-in customer can still resolve.
+          await showWithoutTracking();
+          return;
+        }
+
         const verifyData = await verifyRes.json();
+        const resolved: Order | undefined = verifyData?.order || order;
+        if (!resolved) {
+          setResult({ kind: "missing" });
+          return;
+        }
         const status: string =
           verifyData?.status ||
-          (order.paymentStatus === "PAID" ? "PAID" : "PENDING");
-
-        if (status === "PAID") {
-          if (!cleaned.current && order.items && order.items.length) {
-            cleaned.current = true;
-            removePurchasedItems(
-              order.items.map((it) => ({
-                productId: it.productId || "",
-                size: it.size || "",
-                color: it.color || "",
-                quantity: it.quantity || 1,
-              }))
-            );
-          }
-          setResult({ kind: "paid", order: verifyData?.order || order });
-        } else if (status === "CANCELLED") {
-          setResult({ kind: "cancelled", order: verifyData?.order || order });
-        } else if (status === "FAILED") {
-          setResult({
-            kind: "failed",
-            order: verifyData?.order || order,
-            error: verifyData?.error,
-          });
-        } else {
-          setResult({ kind: "pending", order: verifyData?.order || order, error: verifyData?.error });
-        }
+          (resolved.paymentStatus === "PAID" ? "PAID" : "PENDING");
+        applyStatus(status, resolved, verifyData?.error);
       } catch {
         if (!cancelled) setResult({ kind: "missing" });
       }
@@ -138,7 +181,7 @@ function CheckoutSuccessContent() {
     return () => {
       cancelled = true;
     };
-  }, [orderNo, removePurchasedItems]);
+  }, [orderNo, trackerParam, removePurchasedItems]);
 
   const renderLoading = () => (
     <div className="min-h-screen bg-white flex items-center justify-center">
