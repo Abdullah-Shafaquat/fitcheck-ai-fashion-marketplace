@@ -83,7 +83,7 @@ FitCheck is a complete, production-oriented **fashion e-commerce marketplace** b
 - **Product detail** — gallery with thumbnails + lightbox, rating & reviews, price/old-price/savings, badges, stock status, size guide, accordions, related & recently-viewed.
 - **Cart** — images, size/color, quantities, savings, live server-side stock & price validation, price-change warnings, order summary.
 - **Wishlist** — saved products with live availability overlays, quick add to cart.
-- **Checkout** — 3-step wizard (Shipping → Payment → Review) with saved addresses, COD / online (Safepay) / JazzCash / Easypaisa.
+- **Checkout** — 3-step wizard (Shipping → Payment → Review) with saved addresses, COD / online (Safepay, incl. Easypaisa wallet) / JazzCash.
 - **Orders & tracking** — order history, order detail with a visual tracking timeline, tracking-by-order-number, receipts (print/download), cancellation & refund requests.
 - **Addresses & notifications** — saved address CRUD with default address, per-account notification center.
 - **Account** — profile (rendered from real authenticated data), settings, security (password change), notification preferences.
@@ -122,7 +122,7 @@ FitCheck is a complete, production-oriented **fashion e-commerce marketplace** b
 - **AI assistant:** Google Gemini (REST, function calling) — server-side key only
 - **Animation:** `motion` (Framer Motion) + `gsap` + `tailwindcss-animate`
 - **Icons:** `react-icons`
-- **Payments:** Safepay (live-integration-ready), JazzCash & Easypaisa (architecture complete, blocked until credentials)
+- **Payments:** Safepay (cards + local wallets incl. Easypaisa, live-integration-ready) & JazzCash (direct hosted checkout, config-gated on JazzCash merchant credentials)
 - **Other:** Next.js metadata/SEO, dynamic sitemap & robots
 
 ---
@@ -244,7 +244,7 @@ All secrets are provided at runtime via environment variables. **Never commit re
 | Variable | Purpose |
 | --- | --- |
 | `SAFEPAY_*` (client/secret, base URL, `SAFEPAY_WEBHOOK_SECRET`) | Safepay live/sandbox integration + webhook signature verification (legacy `SAFTPAY_WEBHOOK_SECRET` accepted as fallback) |
-| `JAZZCASH_*`, `EASYPAISA_*` | JazzCash / Easypaisa merchant credentials. When set, checkout offers direct hosted-wallet payment (IPN webhook confirms the order); when empty the options stay "coming soon". |
+| `JAZZCASH_*` | JazzCash merchant credentials. When set, checkout offers the direct JazzCash hosted-wallet option (IPN webhook confirms the order). Easypaisa needs no credentials of its own — it is offered inside Safepay's hosted checkout. |
 
 **Optional / feature variables:** carrier/tracking credentials for the shipping-tracking registry, email provider, object storage for uploads, and monitoring keys. Refer to `.env.example` and `docs/production-deployment.md`.
 
@@ -282,7 +282,8 @@ All secrets are provided at runtime via environment variables. **Never commit re
 Only integrations that actually exist are described here:
 
 - **Safepay** — online card payment. Amounts are **verified server-side** from the database (client-controlled totals are never trusted). Callback webhooks verify the HMAC signature and **fail closed** (unverifiable callbacks are rejected) before any order is marked paid. Sandbox development is supported; live mode requires live credentials.
-- **JazzCash** & **Easypaisa** — the payment **architecture is complete**, but checkout is **hard-blocked** until live merchant credentials/approval are configured. There is no fake or placeholder integration.
+- **JazzCash** — a direct hosted checkout. Amounts and payee are **verified server-side**; the IPN webhook verifies the SecureHash signature and **fails closed** (unverifiable callbacks are rejected) before any order is marked paid. The checkout option is config-gated on JazzCash merchant credentials — there is no fake or placeholder integration.
+- **Easypaisa** — not a separate integration. Safepay processes the Easypaisa wallet on its own hosted checkout page (where the merchant account has it enabled), so shoppers select Easypaisa inside the Safepay flow and no additional credentials are required.
 
 External configuration requirements are identified in `docs/production-deployment.md`.
 
@@ -351,7 +352,7 @@ The `Gemini AI` agent answers natural-language shopping questions with **real, c
 
 Be completely honest — these are real, current limitations:
 
-- **Payments:** JazzCash & Easypaisa are architecture-complete but checkout is blocked until live credentials; Safepay requires live mode + webhook secret.
+- **Payments:** JazzCash requires JazzCash merchant credentials before the direct hosted-checkout option can process real payments; Safepay requires live mode + webhook secret (Easypaisa is paid through Safepay, no separate keys).
 - **Shipping/tracking:** carrier registry is empty until live carrier credentials are provided; no tracking events are fabricated.
 - **Gemini agent:** requires `GEMINI_API_KEY` and live network access to the Gemini API; without it the UI loads but the assistant cannot respond.
 - **`/admin/settings`** persists store settings to `localStorage` (not a backend).

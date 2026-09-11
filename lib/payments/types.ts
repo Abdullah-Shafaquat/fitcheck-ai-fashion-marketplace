@@ -1,11 +1,16 @@
 /**
  * Unified payment provider architecture.
  *
- * Every external payment provider (Safepay, JazzCash, Easypaisa, ...) implements
+ * Every external payment provider (Safepay, JazzCash, ...) implements
  * the `PaymentProvider` interface and is wired up through the factory in
  * `lib/payments/index.ts`. Checkout and order-creation code depend on this
  * interface only — never on provider-specific internals — so a provider can be
  * added, enabled, or disabled without rewriting the checkout flow.
+ *
+ * The Safepay provider additionally covers the Easypaisa wallet (and bank
+ * transfers) on its hosted checkout where the merchant account has them
+ * enabled — those are NOT separate providers here; a shopper picks them on
+ * Safepay's payment page, and the Safepay tracker reports the method used.
  *
  * The DATABASE is the single source of truth for an order's payment state.
  * These types are a thin internal seam for building provider sessions and
@@ -13,7 +18,7 @@
  * without server-side verification against the authoritative order record.
  */
 
-export type PaymentProviderId = "safepay" | "jazzcash" | "easypaisa";
+export type PaymentProviderId = "safepay" | "jazzcash";
 
 export type ProviderPaymentStatus =
   | "PENDING"

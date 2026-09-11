@@ -17,7 +17,7 @@ import {
 } from "react-icons/io5";
 
 interface AlternateProvider {
-  id: "jazzcash" | "easypaisa";
+  id: "jazzcash";
   label: string;
 }
 
@@ -54,7 +54,7 @@ export default function CheckoutPage() {
     Record<string, { old: number; new: number }>
   >({});
   const [paymentMethod, setPaymentMethod] = useState<
-    "online" | "cod" | "jazzcash" | "easypaisa"
+    "online" | "cod" | "jazzcash"
   >("online");
   const [alternateProviders, setAlternateProviders] = useState<AlternateProvider[]>([]);
   const [placing, setPlacing] = useState(false);
@@ -574,7 +574,7 @@ export default function CheckoutPage() {
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-secondary">Pay Online</p>
                         <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">
-                          Pay now via Safepay&apos;s secure page — cards, JazzCash, Easypaisa & wallets.
+                          Pay online via Safepay&apos;s secure checkout — cards &amp; local wallets (e.g. Easypaisa).
                         </p>
                       </div>
                     </button>
@@ -598,7 +598,6 @@ export default function CheckoutPage() {
                       </div>
                     </button>
                     {alternateProviders.map((p) => {
-                      const Icon = p.id === "jazzcash" ? IoPhonePortraitOutline : IoWalletOutline;
                       const active = paymentMethod === p.id;
                       const iconBg = active ? "bg-primary/10" : "bg-gray-100";
                       const iconColor = active ? "text-primary" : "text-gray-400";
@@ -614,14 +613,12 @@ export default function CheckoutPage() {
                           }`}
                         >
                           <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg}`}>
-                            <Icon size={22} className={iconColor} />
+                            <IoPhonePortraitOutline size={22} className={iconColor} />
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-bold text-secondary">{p.label}</p>
                             <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">
-                              {p.id === "jazzcash"
-                                ? "Pay directly with your JazzCash account on the secure JazzCash page."
-                                : "Pay directly with your Easypaisa account on the secure Easypaisa page."}
+                              Pay directly with your JazzCash account on the secure JazzCash page.
                             </p>
                           </div>
                         </button>
@@ -630,25 +627,23 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                {(paymentMethod === "jazzcash" || paymentMethod === "easypaisa") && (
+                {paymentMethod === "jazzcash" && (
                   <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 overflow-hidden">
                     <div className="flex items-center gap-4 p-5 border-b border-emerald-100">
                       <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
                         <IoShieldCheckmarkOutline size={24} className="text-emerald-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-secondary">
-                          {paymentMethod === "jazzcash" ? "JazzCash" : "Easypaisa"}
-                        </p>
+                        <p className="text-sm font-bold text-secondary">JazzCash</p>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          You&apos;ll pay securely on {paymentMethod === "jazzcash" ? "JazzCash" : "Easypaisa"}&apos;s hosted page.
+                          You&apos;ll pay securely on JazzCash&apos;s hosted page.
                         </p>
                       </div>
                     </div>
                     <div className="p-5 text-xs text-gray-500 leading-relaxed">
                       <p>
                         You will be redirected to{" "}
-                        <span className="font-bold text-secondary">{paymentMethod === "jazzcash" ? "JazzCash" : "Easypaisa"}</span>&apos;s
+                        <span className="font-bold text-secondary">JazzCash</span>&apos;s
                         secure page to authorize the payment. Your order is confirmed once the payment
                         is verified.
                       </p>
@@ -678,10 +673,10 @@ export default function CheckoutPage() {
                       <p className="text-xs text-gray-500 leading-relaxed">
                         You will be redirected to Safepay&apos;s secure payment page where you can pay
                         using the method of your choice. The payment methods offered there (such as
-                        Visa / Mastercard debit or credit cards, JazzCash, Easypaisa and bank-supported
-                        wallets) are the ones actually enabled and processed through this store&apos;s
-                        Safepay merchant account. We never collect or store your card number, CVV or
-                        expiry date.
+                        Visa / Mastercard debit or credit cards, the Easypaisa wallet and other
+                        bank-supported wallets) are the ones actually enabled and processed through
+                        this store&apos;s Safepay merchant account. We never collect or store your card
+                        number, CVV or expiry date.
                       </p>
 
                       {/* Informational chips — all processed on Safepay's hosted page, not locally */}
@@ -690,7 +685,7 @@ export default function CheckoutPage() {
                           Available on Safepay&apos;s secure page
                         </p>
                         <div className="flex flex-wrap gap-2">
-                          {["Debit / Credit Cards", "Visa", "Mastercard", "JazzCash", "Easypaisa", "Bank Wallets"].map(
+                          {["Debit / Credit Cards", "Visa", "Mastercard", "Easypaisa", "Bank Wallets"].map(
                             (label) => (
                               <span
                                 key={label}
@@ -769,7 +764,7 @@ export default function CheckoutPage() {
 
                 <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
                   <IoLockClosedOutline size={12} />
-                  {paymentMethod === "cod" ? "No advance payment required" : paymentMethod === "jazzcash" || paymentMethod === "easypaisa" ? "You will be redirected to the provider's secure page" : "Secured by Safepay"}
+                  {paymentMethod === "cod" ? "No advance payment required" : paymentMethod === "jazzcash" ? "You will be redirected to the provider's secure page" : "Secured by Safepay"}
                 </div>
               </form>
             ) : (
@@ -897,7 +892,7 @@ export default function CheckoutPage() {
                       <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
                         {paymentMethod === "cod" ? (
                           <IoCashOutline size={20} className="text-gray-400" />
-                        ) : paymentMethod === "jazzcash" || paymentMethod === "easypaisa" ? (
+                        ) : paymentMethod === "jazzcash" ? (
                           <IoWalletOutline size={20} className="text-gray-400" />
                         ) : (
                           <IoCardOutline size={20} className="text-gray-400" />
@@ -912,9 +907,7 @@ export default function CheckoutPage() {
                             ? "Pay Online (Safepay secure page)"
                             : paymentMethod === "cod"
                             ? "Cash on Delivery"
-                            : paymentMethod === "jazzcash"
-                            ? "JazzCash"
-                            : "Easypaisa"}
+                            : "JazzCash"}
                         </p>
                       </div>
                     </div>
@@ -986,8 +979,6 @@ export default function CheckoutPage() {
                           ? "Place Order (Pay on Delivery)"
                           : paymentMethod === "jazzcash"
                           ? "Pay with JazzCash"
-                          : paymentMethod === "easypaisa"
-                          ? "Pay with Easypaisa"
                           : "Pay with Safepay"}
                       </>
                     )}
@@ -1010,7 +1001,7 @@ export default function CheckoutPage() {
                   <IoLockClosedOutline size={12} />
                   {paymentMethod === "cod"
                     ? "No advance payment required"
-                    : paymentMethod === "jazzcash" || paymentMethod === "easypaisa"
+                    : paymentMethod === "jazzcash"
                     ? "Payments processed by the provider's secure page"
                     : "Secured by Safepay"}
                 </div>

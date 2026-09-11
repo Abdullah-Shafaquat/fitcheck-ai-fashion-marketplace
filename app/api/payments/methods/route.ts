@@ -33,8 +33,6 @@ function providerLabel(id: string): string {
       return "Safepay";
     case "jazzcash":
       return "JazzCash";
-    case "easypaisa":
-      return "Easypaisa";
     default:
       return id;
   }
@@ -48,8 +46,6 @@ function configuredLabel(id: string): string {
         : "Available (sandbox — test mode)";
     case "jazzcash":
       return "Enabled. Checkout redirects to JazzCash's hosted page.";
-    case "easypaisa":
-      return "Enabled. Checkout redirects to Easypaisa's hosted page.";
     default:
       return "Available";
   }

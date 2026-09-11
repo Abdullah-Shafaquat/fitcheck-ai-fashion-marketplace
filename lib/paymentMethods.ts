@@ -1,16 +1,15 @@
 /**
- * Config-gated alternate payment providers (JazzCash / Easypaisa).
+ * Alternate payment providers.
  *
- * A provider becomes selectable at checkout once its merchant credentials are
- * present in the environment. When configured, orders are created through the
- * unified provider layer and the customer is redirected to the provider's
- * hosted checkout; payments are confirmed server-side via the provider's IPN
- * webhook (signature + amount verified against the authoritative order).
+ * JazzCash is a direct hosted checkout, config-gated on its own merchant
+ * credentials (JAZZCASH_*). Easypaisa is NOT integrated separately — Safepay
+ * processes the Easypaisa wallet on its hosted checkout, so shoppers select
+ * Easypaisa on Safepay's payment page and no Easypaisa credentials are needed.
  */
 
 import { getPaymentProvider } from "@/lib/payments";
 
-export type AlternatePaymentProvider = "jazzcash" | "easypaisa";
+export type AlternatePaymentProvider = "jazzcash";
 
 export interface AlternatePaymentProviderInfo {
   id: AlternatePaymentProvider;
@@ -25,10 +24,6 @@ export function jazzcashConfigured(): boolean {
   return getPaymentProvider("jazzcash")?.configured() ?? false;
 }
 
-export function easypaisaConfigured(): boolean {
-  return getPaymentProvider("easypaisa")?.configured() ?? false;
-}
-
 export function getAlternatePaymentInfo(): AlternatePaymentProviderInfo[] {
   return [
     {
@@ -38,14 +33,6 @@ export function getAlternatePaymentInfo(): AlternatePaymentProviderInfo[] {
       note: jazzcashConfigured()
         ? "Payment is processed on JazzCash's secure hosted page."
         : "JazzCash credentials are not configured (NEXT_PUBLIC_JAZZCASH_MERCHANT_ID, JAZZCASH_PASSWORD, JAZZCASH_SALT_KEY).",
-    },
-    {
-      id: "easypaisa",
-      label: "Easypaisa",
-      enabled: easypaisaConfigured(),
-      note: easypaisaConfigured()
-        ? "Payment is processed on Easypaisa's secure hosted page."
-        : "Easypaisa credentials are not configured (NEXT_PUBLIC_EASYPAISA_STORE_ID, EASYPAISA_HASH_KEY).",
     },
   ];
 }

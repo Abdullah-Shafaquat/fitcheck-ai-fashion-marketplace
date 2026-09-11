@@ -95,7 +95,6 @@ function providerIdForPaymentMethod(paymentMethod: unknown): PaymentProviderId |
     .toLowerCase();
   if (method === "online" || method === "safepay") return "safepay";
   if (method === "jazzcash") return "jazzcash";
-  if (method === "easypaisa") return "easypaisa";
   return null;
 }
 
@@ -176,10 +175,11 @@ export async function POST(req: NextRequest) {
 
     const isCod = body.paymentMethod === "cod" || body.cod === true;
 
-    // JazzCash / Easypaisa are config-gated. Resolve the chosen method to a
-    // provider; validate it is actually configured before creating an order so
-    // we never write an order we cannot process. Customers are only directed to
-    // these hosted flows when merchant credentials are present in the env.
+    // JazzCash is config-gated. Resolve the chosen method to a provider;
+    // validate it is actually configured before creating an order so we never
+    // write an order we cannot process. Customers are only directed to this
+    // hosted flow when merchant credentials are present in the env. (Easypaisa
+    // is not a separate provider — shoppers pick it inside Safepay's checkout.)
     const providerId = providerIdForPaymentMethod(body.paymentMethod);
     if (providerId && !onlineProviderReady(providerId)) {
       return NextResponse.json(
@@ -191,7 +191,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const ALLOWED_PAYMENT_METHODS = ["online", "cod", "safepay", "jazzcash", "easypaisa"];
+    const ALLOWED_PAYMENT_METHODS = ["online", "cod", "safepay", "jazzcash"];
     if (!ALLOWED_PAYMENT_METHODS.includes(String(body.paymentMethod || ""))) {
       return NextResponse.json(
         { error: "Unsupported payment method." },

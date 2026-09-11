@@ -368,9 +368,8 @@ export const jazzcashProvider: PaymentProvider = {
   /**
    * Server-side payment verification by order reference.
    *
-   * Similar to Easypaisa, the authoritative verification for JazzCash
-   * happens through the IPN callback. This is a fallback that returns
-   * PENDING status.
+   * The authoritative verification for JazzCash happens through the IPN
+   * callback. This is a fallback that returns PENDING status.
    */
   async verifyPayment(reference: string): Promise<PaymentVerificationResult> {
     return {

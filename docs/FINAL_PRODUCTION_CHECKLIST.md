@@ -115,7 +115,7 @@ environmental. Cosmetic issues are explicitly NOT blockers.
 
 1. `[BLOCKER — EXTERNAL]` **Payment provider live credentials / approval**
    - Safepay is wired but running in **sandbox mode**; requires live (non-sandbox) keys + live webhook secret (`SAFEPAY_WEBHOOK_SECRET`; legacy `SAFTPAY_WEBHOOK_SECRET` accepted as fallback) to confirm real payments.
-   - JazzCash and Easypaisa architecture is complete but **checkout is hard-blocked** until valid merchant credentials are provided (`JAZZCASH_*`, `EASYPAISA_*`).
+   - JazzCash architecture is complete but the hosted-checkout option requires valid merchant credentials (`JAZZCASH_*`) to be usable. Easypaisa is not a separate integration — shoppers select the Easypaisa wallet inside Safepay's hosted checkout where the account has it enabled, so no Easypaisa credentials are needed.
 2. `[BLOCKER — EXTERNAL]` **Shipping / tracking provider credentials**
    - `lib/shipping` carrier contract exists but `REGISTRY = {}` (no live carrier). Tracking numbers are admin-entered, not carrier-validated, until a carrier is registered.
 3. `[BLOCKER — ENVIRONMENT]` **Production deployment environment + env vars**
@@ -130,8 +130,8 @@ environmental. Cosmetic issues are explicitly NOT blockers.
 | Dependency | Code / Architecture | External config still required |
 |---|---|---|
 | Safepay | COMPLETE (verify + amount + fail-closed webhook) | Live keys + live webhook secret + non-sandbox mode |
-| JazzCash | COMPLETE + hard-gated | Merchant ID / password / integrity salt / return URL + approval |
-| Easypaisa | COMPLETE + hard-gated | Merchant ID / hash key / return URL + approval |
+| JazzCash | COMPLETE + config-gated | Merchant ID / password / integrity salt / return URL + approval |
+| Easypaisa | Handled through Safepay's hosted checkout (no separate integration) | None — selected by the shopper on Safepay's payment page where the account has it enabled |
 | Shipping (carrier) | COMPLETE contract | Carrier API credentials + registration in `lib/shipping/registry` |
 | Tracking | Architecture ready (event mapping) | Carrier events (no faked courier events today) |
 | PostgreSQL | COMPLETE | Live Neon/Postgres provisioning |

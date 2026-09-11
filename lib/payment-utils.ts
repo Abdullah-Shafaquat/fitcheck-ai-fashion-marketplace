@@ -214,9 +214,7 @@ export async function markOrderPaid(
   const providerLabel =
     recordedProvider === "JAZZCASH"
       ? "JazzCash"
-      : recordedProvider === "EASYPAISA"
-        ? "Easypaisa"
-        : "Safepay";
+      : "Safepay";
   const methodLabel = isCodOrder(order)
     ? "Cash on Delivery"
     : opts?.method?.trim()

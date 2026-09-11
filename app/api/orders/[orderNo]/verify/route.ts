@@ -13,14 +13,14 @@ import { fetchSafePayPayment, safepayCredentialsConfigured } from "@/lib/safepay
 import { notifyAdmin, notifyCustomer } from "@/lib/notify";
 import { PaymentProviderId } from "@/lib/payments";
 
-// Draw the provider from the stored paymentProvider label. Alternate hosted
-// flows (JazzCash / Easypaisa) confirm payment via server-side IPN webhooks, so
-// for those the database record IS the authoritative state — Safepay's tracker
-// API is not consulted.
+// Draw the provider from the stored paymentProvider label. JazzCash's hosted
+// flow confirms payment via its server-side IPN webhook, so for those the
+// database record IS the authoritative state — Safepay's tracker API is not
+// consulted. (Easypaisa is paid through Safepay, so its provider label is
+// handled by the Safepay branch below.)
 function providerForOrder(order: { paymentProvider: string | null }): PaymentProviderId {
   const label = (order.paymentProvider || "").trim().toLowerCase();
   if (label.startsWith("jazzcash")) return "jazzcash";
-  if (label.startsWith("easypaisa")) return "easypaisa";
   return "safepay";
 }
 
@@ -61,10 +61,10 @@ export async function POST(
       );
     }
 
-    // JazzCash / Easypaisa are verified through their IPN webhooks; there is no
-    // public payment lookup, so the recorded DB state is the source of truth.
+    // JazzCash is verified through its IPN webhook; there is no public payment
+    // lookup, so the recorded DB state is the source of truth.
     const provider = providerForOrder(order);
-    if (provider === "jazzcash" || provider === "easypaisa") {
+    if (provider === "jazzcash") {
       return NextResponse.json({
         status: order.paymentStatus === "PAID" ? "PAID" : "PENDING",
         order: serializeOrder(order),

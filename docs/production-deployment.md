@@ -30,9 +30,9 @@ comments). Values are never committed; the `.env` file holds key names only in t
   payment provider (set `SAFTPAY_MODE=live` + live keys + webhook secret; legacy
   `SAFTPAY_WEBHOOK_SECRET` is accepted as a fallback alias).
 - `JAZZCASH_MERCHANT_ID`, `JAZZCASH_PASSWORD`, `JAZZCASH_INTEGRITY_SALT`, `JAZZCASH_RETURN_URL` —
-  JazzCash (enables that provider; otherwise hard-blocked).
-- `EASYPAISA_MERCHANT_ID`, `EASYPAISA_HASH_KEY`, `EASYPAISA_RETURN_URL` — Easypaisa (enables that
-  provider; otherwise hard-blocked).
+  JazzCash (enables the direct hosted-wallet option; otherwise that checkout option is not available).
+  Easypaisa is not configured separately — it is offered inside the Safepay hosted checkout page
+  where the merchant account has it enabled.
 - `NEXT_PUBLIC_SITE_URL` (or `APP_URL`) — canonical origin used by metadata, sitemap and robots
   (falls back to `NEXTAUTH_URL`, then localhost).
 
